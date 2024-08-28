@@ -1,0 +1,17 @@
+# Module directory
+**/.terraform/
+**/.module/
+
+# Compiled and auto-generated files
+**/nohup.out
+**/*.tfstate
+**/*.tfstate.*
+**/planfile
+**/*.planfile
+**/*.kubeconfig
+**/terraform.tfvars.json
+**/terraform.auto.tfvars.json
+**/*.terraform.tfvars.json
+**/*.terraform.auto.tfvars.json
+
+**/.terraform.lock.hcl
