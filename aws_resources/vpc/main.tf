@@ -1,12 +1,8 @@
-data "aws_availability_zones" "available" {
-  state = "available"
-}
+data "aws_availability_zones" "available" {}
 
-# default vpc
+# default vpc for Limble assessment
 resource "aws_vpc" "default" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_support   = true
-  enable_dns_hostnames = true
+  cidr_block = "10.0.0.0/16"
 
   tags = {
     Name       = "${var.name}-vpc"
@@ -14,42 +10,24 @@ resource "aws_vpc" "default" {
   }
 }
 
-# public subnets
-resource "aws_subnet" "public_subnets" {
-  count                   = 2
-  vpc_id                  = aws_vpc.default.id
-  cidr_block              = cidrsubnet(aws_vpc.default.cidr_block, 8, count.index)
-  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
-  map_public_ip_on_launch = true
+# public subnet 1
+resource "aws_subnet" "public_subnet_1" {
+  vpc_id     = aws_vpc.default.id
+  cidr_block = "10.0.0.0/20"
 
   tags = {
-    Name       = "${var.name}-public-subnet-${count.index + 1}"
+    Name       = "${var.name}-public-subnet-1"
     assessment = var.name
   }
 }
 
-# private subnets
-resource "aws_subnet" "private_subnets" {
-  count             = 2
-  vpc_id            = aws_vpc.default.id
-  cidr_block        = cidrsubnet(aws_vpc.default.cidr_block, 8, count.index + 2)
-  availability_zone = element(data.aws_availability_zones.available.names, count.index)
+# public subnet 2
+resource "aws_subnet" "public_subnet_2" {
+  vpc_id     = aws_vpc.default.id
+  cidr_block = "10.0.16.0/20"
 
   tags = {
-    Name       = "${var.name}-private-subnet-${count.index + 1}"
-    assessment = var.name
-  }
-}
-
-# control plane subnets for EKS
-resource "aws_subnet" "control_plane_subnets_eks" {
-  count             = 2
-  vpc_id            = aws_vpc.default.id
-  cidr_block        = cidrsubnet(aws_vpc.default.cidr_block, 8, count.index + 4)
-  availability_zone = element(data.aws_availability_zones.available.names, count.index)
-
-  tags = {
-    Name       = "${var.name}-control-plane-subnet-${count.index + 1}"
+    Name       = "${var.name}-public-subnet-2"
     assessment = var.name
   }
 }
@@ -68,20 +46,86 @@ resource "aws_internet_gateway" "default" {
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.default.id
 
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.default.id
-  }
-
   tags = {
     Name       = "${var.name}-public-route-table"
     assessment = var.name
   }
 }
 
-# associates the public subnets with the route table
-resource "aws_route_table_association" "public_associations" {
-  count          = length(aws_subnet.public_subnets)
-  subnet_id      = aws_subnet.public_subnets[count.index].id
+# associates public subnet 1 with the route table
+resource "aws_route_table_association" "public_association_1" {
+  subnet_id      = aws_subnet.public_subnet_1.id
   route_table_id = aws_route_table.public.id
+}
+
+# associates public subnet 2 with the route table
+resource "aws_route_table_association" "public_association_2" {
+  subnet_id      = aws_subnet.public_subnet_2.id
+  route_table_id = aws_route_table.public.id
+}
+
+# private subnet 1
+resource "aws_subnet" "private_subnet_1" {
+  vpc_id     = aws_vpc.default.id
+  cidr_block = "10.0.128.0/20"
+
+  tags = {
+    Name       = "${var.name}-private-subnet-1"
+    assessment = var.name
+  }
+}
+
+# private subnet 1
+resource "aws_subnet" "private_subnet_2" {
+  vpc_id     = aws_vpc.default.id
+  cidr_block = "10.0.144.0/20"
+
+  tags = {
+    Name       = "${var.name}-private-subnet-2"
+    assessment = var.name
+  }
+}
+
+# Elastic IP for NAT Gateway
+resource "aws_eip" "nat" {
+  domain = "vpc"
+
+  tags = {
+    Name       = "${var.name}-nat-eip"
+    assessment = var.name
+  }
+}
+
+# NAT Gateway for public subnet 1
+resource "aws_nat_gateway" "default" {
+  subnet_id = aws_subnet.public_subnet_1.id
+
+  allocation_id = aws_eip.nat.allocation_id
+
+  tags = {
+    Name       = "${var.name}-public-nat"
+    assessment = var.name
+  }
+}
+
+# route table for the private subnets
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.default.id
+
+  tags = {
+    Name       = "${var.name}-private-route-table"
+    assessment = var.name
+  }
+}
+
+# associates the private subnets with route table
+resource "aws_route_table_association" "private_association_1" {
+  subnet_id      = aws_subnet.private_subnet_1.id
+  route_table_id = aws_route_table.private.id
+}
+
+# associates the private subnets with route table
+resource "aws_route_table_association" "private_association_2" {
+  subnet_id      = aws_subnet.private_subnet_2.id
+  route_table_id = aws_route_table.private.id
 }
