@@ -46,6 +46,11 @@ resource "aws_internet_gateway" "default" {
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.default.id
 
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.default.id
+  }
+
   tags = {
     Name       = "${var.name}-public-route-table"
     assessment = var.name
@@ -75,7 +80,7 @@ resource "aws_subnet" "private_subnet_1" {
   }
 }
 
-# private subnet 1
+# private subnet 2
 resource "aws_subnet" "private_subnet_2" {
   vpc_id     = aws_vpc.default.id
   cidr_block = "10.0.144.0/20"
@@ -96,7 +101,7 @@ resource "aws_eip" "nat" {
   }
 }
 
-# NAT Gateway for public subnet 1
+# NAT Gateway for private subnets
 resource "aws_nat_gateway" "default" {
   subnet_id = aws_subnet.public_subnet_1.id
 
@@ -112,19 +117,24 @@ resource "aws_nat_gateway" "default" {
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.default.id
 
+  route {
+    cidr_block = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.default.id
+  }
+
   tags = {
     Name       = "${var.name}-private-route-table"
     assessment = var.name
   }
 }
 
-# associates the private subnets with route table
+# associates the private subnet 1 with route table
 resource "aws_route_table_association" "private_association_1" {
   subnet_id      = aws_subnet.private_subnet_1.id
   route_table_id = aws_route_table.private.id
 }
 
-# associates the private subnets with route table
+# associates the private subnet 2 with route table
 resource "aws_route_table_association" "private_association_2" {
   subnet_id      = aws_subnet.private_subnet_2.id
   route_table_id = aws_route_table.private.id
