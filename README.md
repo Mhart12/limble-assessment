@@ -22,7 +22,15 @@ I set up a CloudFront distribution in front of the ECS cluster's ALB to enhance 
 
 I would focus on designing a well-optimized caching strategy to ensure assets are delivered as quickly as possible, including automating cache invalidation during deployments or general updates. My next priority would be implementing AWS WAF to enhance security by protecting against threats like SQL injection attempts and other common attacks.
 
-TBC
+### RDS
+
+I deployed a basic, private RDS instance configured with automatic backups, encryption, and a management policy for the master user password. Additionally, it creates a database subnet group for the RDS instance and manages database credentials through AWS Secrets Manager.
+
+**Future Improvements:**
+
+In a real-world setup, there's a good amount of tweaks I'd make to the RDS cluster. I'd enable multi-AZ deployments for better availability, turn on Performance Insights to keep an eye on performance, and export logs to CloudWatch for easier monitoring. I’d also set up IAM authentication and add read replicas to handle different types of queries and improve performance.
+
+For an extra performance boost and better connection management, I'd throw in an ElastiCache Memcached cluster and use RDS Proxy.
 
 ### VPC
 
