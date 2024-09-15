@@ -22,6 +22,14 @@ I set up a CloudFront distribution in front of the ECS cluster's ALB to enhance 
 
 I would focus on designing a well-optimized caching strategy to ensure assets are delivered as quickly as possible, including automating cache invalidation during deployments or general updates. My next priority would be implementing AWS WAF to enhance security by protecting against threats like SQL injection attempts and other common attacks.
 
+### ECS
+
+I chose ECS as the container orchestrator for the WordPress application. I configured a lightweight task using the official WordPress image as the base, as specified in the provided Dockerfile.
+
+**Future Improvements:**
+
+First off, I’d store the environment variables and image details in Parameter Store. This way, there’s less hardcoding and it’s easier to update things later on. I’d also set up autoscaling policies that adjust based on CPU and memory usage to keep things running smoothly.
+
 ### RDS
 
 I deployed a basic, private RDS instance configured with automatic backups, encryption, and a management policy for the master user password. Additionally, it creates a database subnet group for the RDS instance and manages database credentials through AWS Secrets Manager.
