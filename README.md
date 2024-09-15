@@ -23,3 +23,11 @@ I set up a CloudFront distribution in front of the ECS cluster's ALB to enhance 
 I would focus on designing a well-optimized caching strategy to ensure assets are delivered as quickly as possible, including automating cache invalidation during deployments or general updates. My next priority would be implementing AWS WAF to enhance security by protecting against threats like SQL injection attempts and other common attacks.
 
 TBC
+
+### VPC
+
+I set up a dedicated VPC for this project designed to encompass two private and two public subnets. I also wanted to make sure I provided a large pool of IP addresses. The public subnets are configured with route tables that leverage an internet gateway for external access, while the private subnets are securely routed through a NAT gateway for outbound traffic.
+
+**Future Improvements:**
+
+Looking back, I'd set up a separate NAT gateway for each private subnet to avoid any single point of failure. To save on costs, I'd also consider using a NAT instance instead of a gateway. Plus, adding IPv6 CIDRs would help future-proof the network and allow for more scalability.
